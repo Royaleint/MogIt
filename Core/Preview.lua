@@ -916,10 +916,10 @@ end)
 
 local origDressUpItemLink = DressUpItemLink;
 function DressUpItemLink(link)
-	if not (link and C_Item.IsDressableItemByID(link)) then
+	if not link then
 		return false;
 	end
-	if mog.db.profile.dressupPreview then
+	if C_Item.IsDressableItemByID(link) and mog.db.profile.dressupPreview then
 		mog:AddToPreview(link);
 		return true;
 	end
