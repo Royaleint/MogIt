@@ -301,6 +301,7 @@ mog.frame:RegisterEvent("ADDON_LOADED");
 mog.frame:RegisterEvent("PLAYER_LOGIN");
 mog.frame:RegisterEvent("GET_ITEM_INFO_RECEIVED");
 mog.frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED");
+mog.frame:RegisterEvent("TRANSMOG_DISPLAYED_OUTFIT_CHANGED");
 mog.frame:RegisterEvent("TRANSMOG_SEARCH_UPDATED");
 mog.frame:SetScript("OnEvent", function(self, event, ...)
 	return mog[event] and mog[event](mog, ...)
@@ -469,33 +470,25 @@ function mog:PLAYER_LOGIN()
 	C_TransmogCollection.SetClassFilter(currentClassFilter)
 end
 
-function mog:PLAYER_EQUIPMENT_CHANGED(slot)
-	local slotName = mog.mogSlots[slot];
-	local item = GetInventoryItemLink("player", slot);
-	if slotName then
-		local transmogLocation = TransmogUtil.GetTransmogLocation(slot, Enum.TransmogType.Appearance, Enum.TransmogModification.Main);
-		local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID = C_Transmog.GetSlotVisualInfo(transmogLocation);
-		local isTransmogrified, _, _, _, _, _, isHideVisual, texture = C_Transmog.GetSlotInfo(transmogLocation);
-		if isTransmogrified then
-			-- we need an item ID here if we still need to cache these at all
-			-- mog:GetItemInfo(visibleItemID);
-			item = appliedSourceID;
-			itemAppearanceModID = visibleItemAppearanceModID;
-		end
-	end
-	-- don't do anything if the slot is not visible (necklace, ring, trinket)
+local function dressModels()
 	if mog.db.profile.gridDress == "equipped" then
 		for i, frame in ipairs(mog.models) do
 			if frame.data.item then
-				if item then
-					frame:TryOn(item, slotName, itemAppearanceModID);
-				else
-					frame:UndressSlot(slot);
-				end
+				frame:ResetModel();
 				frame:TryOn(frame.data.item);
 			end
 		end
 	end
+end
+
+function mog:PLAYER_EQUIPMENT_CHANGED(slot)
+	if mog.mogSlots[slot] then
+		C_Timer.After(0.5, dressModels)
+	end
+end
+
+function mog:TRANSMOG_DISPLAYED_OUTFIT_CHANGED()
+	C_Timer.After(0.5, dressModels)
 end
 --//
 

@@ -1,8 +1,8 @@
 local MogIt, mog = ...;
 local L = mog.L;
 
-local GetScreenWidth = GetScreenWidth;
-local GetScreenHeight = GetScreenHeight;
+local screenWidth = GetScreenWidth();
+local screenHeight = GetScreenHeight();
 
 local class = L.classBits[select(2, UnitClass("PLAYER"))];
 
@@ -44,11 +44,15 @@ mog.tooltip:SetScript("OnEvent", function(self, event, arg1)
 			SetOverrideBinding(mog.tooltip, true, "MOUSEWHEELUP", "MogIt_TooltipScrollUp");
 			SetOverrideBinding(mog.tooltip, true, "MOUSEWHEELDOWN", "MogIt_TooltipScrollDown");
 		end
+	elseif event == "DISPLAY_SIZE_CHANGED" then
+		screenWidth = GetScreenWidth();
+		screenHeight = GetScreenHeight();
 	end
 end);
 mog.tooltip:RegisterEvent("PLAYER_LOGIN");
 mog.tooltip:RegisterEvent("PLAYER_REGEN_DISABLED");
 mog.tooltip:RegisterEvent("PLAYER_REGEN_ENABLED");
+mog.tooltip:RegisterEvent("DISPLAY_SIZE_CHANGED");
 --//
 
 
@@ -110,7 +114,7 @@ function mog.tooltip:ShowItem(itemLink)
 					end
 				end
 				local _, _, _, slot = C_Item.GetItemInfoInstant(itemLink);
-				if (not db.tooltipMog or select(3, C_Transmog.CanTransmogItem(itemID))) and tooltip.slots[slot] and C_Item.IsDressableItemByID(itemLink) then
+				if (not db.tooltipMog or C_TransmogCollection.GetItemInfo(itemID)) and tooltip.slots[slot] and C_Item.IsDressableItemByID(itemLink) then
 					tooltip.model:SetFacing(tooltip.slots[slot]-(db.tooltipRotate and 0.5 or 0));
 					tooltip:Show();
 					tooltip.owner = self;
@@ -212,14 +216,14 @@ mog.tooltip.repos:SetScript("OnUpdate", function(self)
 		mog.tooltip:ClearAllPoints();
 		local mogpoint, ownerpoint;
 		if mog.db.profile.tooltipAnchor == "vertical" then
-			if y / GetScreenHeight() > 0.5 then
+			if y / screenHeight > 0.5 then
 				mogpoint = "TOP";
 				ownerpoint = "BOTTOM";
 			else
 				mogpoint = "BOTTOM";
 				ownerpoint = "TOP";
 			end
-			if x / GetScreenWidth() > 0.5 then
+			if x / screenWidth > 0.5 then
 				mogpoint = mogpoint.."LEFT";
 				ownerpoint = ownerpoint.."LEFT";
 			else
@@ -227,7 +231,7 @@ mog.tooltip.repos:SetScript("OnUpdate", function(self)
 				ownerpoint = ownerpoint.."RIGHT";
 			end
 		else
-			if x / GetScreenWidth() > 0.5 then
+			if x / screenWidth > 0.5 then
 				mogpoint = "RIGHT";
 				ownerpoint = "LEFT";
 			else

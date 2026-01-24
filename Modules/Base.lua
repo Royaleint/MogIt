@@ -61,8 +61,8 @@ function mog.base:FrameUpdate(frame, value)
 	local items = { };
 	local canUse = false;
 	for i, source in ipairs(value) do
-		local _, _, _, _, _, itemLink = C_TransmogCollection.GetAppearanceSourceInfo(source);
-		tinsert(items, itemLink);
+		local sourceInfo = C_TransmogCollection.GetAppearanceSourceInfo(source);
+		tinsert(items, sourceInfo.itemLink);
 		local sourceInfo = C_TransmogCollection.GetSourceInfo(source);
 		if not (sourceInfo.useErrorType == Enum.TransmogUseErrorType.Race or sourceInfo.useErrorType == Enum.TransmogUseErrorType.Faction) then
 			canUse = true;
