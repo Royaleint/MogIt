@@ -242,25 +242,17 @@ local previewMenu = {
 		text = L["Equip current gear"],
 		notCheckable = true,
 		func = function(self)
+			currentPreview.model:ResetModel()
+			local itemTransmogInfoList = currentPreview.model.model:GetItemTransmogInfoList()
+
 			for k, v in pairs(currentPreview.slots) do
 				mog.view.DelItem(k, currentPreview);
 				local slotID = GetInventorySlotInfo(k);
-				local item = GetInventoryItemLink("player", slotID);
-				if item then
-					local transmogLocation = TransmogUtil.GetTransmogLocation(slotID, Enum.TransmogType.Appearance, Enum.TransmogModification.Main);
-					local isTransmogrified, _, _, _, _, _, isHideVisual, texture = C_Transmog.GetSlotInfo(transmogLocation);
-					local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID = C_Transmog.GetSlotVisualInfo(transmogLocation);
-					if isTransmogrified then
-						if isHideVisual then
-							item = nil;
-						else
-							local categoryID, appearanceVisualID, canEnchant, icon, isCollected, link = C_TransmogCollection.GetAppearanceSourceInfo(appliedSourceID);
-							item = link;
-						end
-					end
-				end
-				if item then
-					mog.view.AddItem(item, currentPreview);
+				local itemTransmogInfo = itemTransmogInfoList[slotID]
+				local appearanceID = itemTransmogInfo.appearanceID
+				if appearanceID ~= Constants.Transmog.NoTransmogID and not C_TransmogCollection.IsAppearanceHiddenVisual(appearanceID) then
+					local sourceInfo = C_TransmogCollection.GetAppearanceSourceInfo(appearanceID);
+					mog.view.AddItem(sourceInfo.itemLink, currentPreview);
 				end
 			end
 			if mog.activePreview == currentPreview and mog.db.profile.gridDress == "preview" then
@@ -401,19 +393,20 @@ local function loadInitialize(self, level)
 			end
 		end
 		if UIDROPDOWNMENU_MENU_VALUE == "outfits" then
-			if #C_TransmogCollection.GetOutfits() > 0 then
-				for i, outfit in ipairs(C_TransmogCollection.GetOutfits()) do
+			local customSets = C_TransmogCollection.GetCustomSets()
+			if #customSets > 0 then
+				for i, customSetID in ipairs(customSets) do
 					local info = UIDropDownMenu_CreateInfo()
-					info.text = C_TransmogCollection.GetOutfitInfo(outfit)
+					info.text = C_TransmogCollection.GetCustomSetInfo(customSetID)
 					info.notCheckable = true
-					info.func = function(self, outfitID)
-						mog:PreviewFromOutfit(currentPreview, C_TransmogCollection.GetOutfitItemTransmogInfoList(outfitID))
-						local title = C_TransmogCollection.GetOutfitInfo(outfitID)
+					info.func = function(self, customSetID)
+						mog:PreviewFromOutfit(currentPreview, C_TransmogCollection.GetCustomSetItemTransmogInfoList(customSetID))
+						local title = C_TransmogCollection.GetCustomSetInfo(customSetID)
 						currentPreview:SetTitle(title)
 						currentPreview.data.title = title
 						CloseDropDownMenus()
 					end
-					info.arg1 = outfit
+					info.arg1 = customSetID
 					self:AddButton(info, level)
 				end
 			else
@@ -843,15 +836,19 @@ function mog:PreviewFromOutfit(preview, appearanceSources, mainHandEnchant, offH
 	local mainHandSlotID = GetInventorySlotInfo("MAINHANDSLOT");
 	local secondaryHandSlotID = GetInventorySlotInfo("SECONDARYHANDSLOT");
 	for i, source in ipairs(appearanceSources) do
-		if source ~= NO_TRANSMOG_SOURCE_ID and i ~= mainHandSlotID and i ~= secondaryHandSlotID then
-			local _, _, _, _, _, link = C_TransmogCollection.GetAppearanceSourceInfo(source.appearanceID);
-			appearanceSources[i] = link;
+		if source.appearanceID ~= Constants.Transmog.NoTransmogID and i ~= mainHandSlotID and i ~= secondaryHandSlotID then
+			local sourceInfo = C_TransmogCollection.GetAppearanceSourceInfo(source.appearanceID);
+			if sourceInfo then
+				appearanceSources[i] = sourceInfo.itemLink;
+			end
 		end
 	end
 
 	-- remap handheld items into string IDs instead as numerical IDs are not supported
-	appearanceSources["MainHandSlot"] = select(6, C_TransmogCollection.GetAppearanceSourceInfo(appearanceSources[mainHandSlotID].appearanceID));
-	appearanceSources["SecondaryHandSlot"] = select(6, C_TransmogCollection.GetAppearanceSourceInfo(appearanceSources[secondaryHandSlotID].appearanceID));
+	local mainHandSourceInfo = C_TransmogCollection.GetAppearanceSourceInfo(appearanceSources[mainHandSlotID].appearanceID);
+	local secondaryHandSourceInfo = C_TransmogCollection.GetAppearanceSourceInfo(appearanceSources[secondaryHandSlotID].appearanceID);
+	appearanceSources["MainHandSlot"] = mainHandSourceInfo and mainHandSourceInfo.itemLink;
+	appearanceSources["SecondaryHandSlot"] = secondaryHandSourceInfo and secondaryHandSourceInfo.itemLink;
 	appearanceSources[mainHandSlotID] = nil;
 	appearanceSources[secondaryHandSlotID] = nil;
 

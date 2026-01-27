@@ -177,8 +177,8 @@ local sourceItemLink = {}
 
 function mog:GetItemLinkFromSource(source)
 	if not sourceItemLink[source] then
-		local _, _, _, _, _, link = C_TransmogCollection.GetAppearanceSourceInfo(source)
-		sourceItemLink[source] = link
+		local sourceInfo = C_TransmogCollection.GetAppearanceSourceInfo(source)
+		sourceItemLink[source] = sourceInfo.itemLink
 	end
 	return sourceItemLink[source]
 end

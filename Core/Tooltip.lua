@@ -168,7 +168,8 @@ function mog.tooltip:ShowItem(itemLink)
 		local itemIDs = C_TransmogCollection.GetAllAppearanceSources(visualID);
 		if itemIDs then
 			for i, item in ipairs(itemIDs) do
-				local foundAlternate, profiles = mog.wishlist:IsItemInWishlist((select(6, C_TransmogCollection.GetAppearanceSourceInfo(item))));
+				local sourceInfo = C_TransmogCollection.GetAppearanceSourceInfo(item);
+				local foundAlternate, profiles = mog.wishlist:IsItemInWishlist(sourceInfo and sourceInfo.itemLink);
 				if foundAlternate then
 					if not found then
 						self:AddLine(" ");
@@ -267,16 +268,6 @@ end);
 
 hooksecurefunc(GameTooltip, "SetQuestLogItem", function(self, itemType, index)
 	mog.tooltip:ShowItem(GetQuestLogItemLink(itemType, index));
-	GameTooltip:Show();
-end);
-
--- hooksecurefunc(GameTooltip, "SetRecipeResultItem", function(self, recipeID)
-	-- mog.tooltip:ShowItem(C_TradeSkillUI.GetRecipeItemLink(recipeID));
-	-- GameTooltip:Show();
--- end);
-
-hooksecurefunc(GameTooltip, "SetRecipeReagentItem", function(self, recipeID, reagentIndex)
-	mog.tooltip:ShowItem(C_TradeSkillUI.GetRecipeFixedReagentItemLink(recipeID, reagentIndex));
 	GameTooltip:Show();
 end);
 --//

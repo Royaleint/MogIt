@@ -383,7 +383,8 @@ do	-- item functions
 					local sources = C_TransmogCollection.GetAllAppearanceSources(visualID)
 					items = {}
 					for i, source in ipairs(sources) do
-						items[i] = mog:NormaliseItemString(select(6, C_TransmogCollection.GetAppearanceSourceInfo(source)))
+						local sourceInfo = C_TransmogCollection.GetAppearanceSourceInfo(source);
+						items[i] = mog:NormaliseItemString(sourceInfo.itemLink)
 					end
 				end
 			end
